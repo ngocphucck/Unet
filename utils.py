@@ -1,5 +1,4 @@
 import os
-import json
 from pycocotools.coco import COCO
 from PIL import Image
 from tqdm import tqdm
