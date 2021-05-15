@@ -55,8 +55,6 @@ class Up(Module):
     def forward(self, concat_tensor, input_tensor):
         output_tensor = self.relu(self.up_conv(input_tensor))
 
-        print(concat_tensor.shape)
-        print(output_tensor.shape)
         output_tensor = torch.cat([concat_tensor, output_tensor], dim=1)
         output_tensor = self.double_conv(output_tensor)
 
@@ -117,6 +115,7 @@ class Unet(Module):
 
 
 if __name__ == '__main__':
-    dataset = XrayDataset()
     model = Unet()
+
+    summary(model, (1, 512, 512))
     pass
