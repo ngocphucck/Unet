@@ -17,4 +17,31 @@ up convolution and to interpret it clearly, I recommend some explanations:
 
 ## Usage
 
+### Dataset 
+
+You have to format your dataset in the following manner:
+
+![tree](images/tree.png)
+
+### Training
+
+```bash
+$ python train.py --help
+usage: train.py [-h] [--batch_size BATCH_SIZE] [--num_epochs NUM_EPOCHS] [--lr LR] [--num_workers NUM_WORKERS] [--weights WEIGHTS] [--image_size IMAGE_SIZE]
+
+Training U-Net model for segmentation of xray
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --batch_size BATCH_SIZE
+                        input batch size for training (default: 16)
+  --num_epochs NUM_EPOCHS
+                        number of epochs to train (default: 50)
+  --lr LR               initial learning rate (default: 1e-3)
+  --num_workers NUM_WORKERS
+                        number of workers for data loading (default: 4)
+  --weights WEIGHTS     Path to checkpoint (default: None)
+  --image_size IMAGE_SIZE
+                        input image size (default: 512)
+```
 ## Result
