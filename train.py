@@ -1,7 +1,6 @@
 import argparse
 import logging
-import sys
-
+import os
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
@@ -29,7 +28,6 @@ def data_loaders(image_size=(512, 512),
         np.random.seed(42 + worker_id)
 
     train_dataset = XrayDataset(train_image_dir, train_mask_dir, image_size)
-    print(train_dataset[0])
     train_loader = DataLoader(
         train_dataset,
         batch_size=batch_size,
@@ -37,9 +35,6 @@ def data_loaders(image_size=(512, 512),
         num_workers=num_workers,
         worker_init_fn=worker_init
     )
-    for i in train_loader:
-        print(i)
-        sys.exit()
 
     val_dataset = XrayDataset(val_image_dir, val_mask_dir, image_size)
     val_loader = DataLoader(
@@ -59,14 +54,14 @@ def train_net(image_size,
               lr,
               num_workers,
               checkpoint):
-    train_loader, val_loader = data_loaders(image_size=(image_size, image_size))
+    train_loader, val_loader = data_loaders(image_size=(image_size, image_size), batch_size=batch_size)
     device = torch.device('cuda') if torch.cuda.is_available() else 'cpu'
     model = Unet().to(device)
     if checkpoint:
         model.load_state_dict(torch.load(checkpoint))
 
-    criterion = DiceLoss()
-    optimizer = Adam(model.parameters())
+    criterion = DiceLoss().to(device)
+    optimizer = Adam(model.parameters(), lr=lr)
 
     logging.info(f'Start training:\n'
                  f'Num epochs:               {num_epochs}\n'
@@ -80,17 +75,19 @@ def train_net(image_size,
     train_losses = []
     val_losses = []
 
-    for i, epoch in enumerate(range(num_epochs)):
-        print(f'Epoch {i+1}: ')
+    for epoch in range(num_epochs):
+        print(f'Epoch {epoch+1}: ')
         train_batch_losses = []
         val_batch_losses = []
+        best_val_loss = 9999
 
-        for x_train, y_train in train_loader:
-            print('hello')
+        for x_train, y_train in tqdm(train_loader):
             x_train = x_train.to(device)
             y_train = y_train.to(device)
+            y_pred = model(x_train)
+
             optimizer.zero_grad()
-            loss = criterion(x_train, y_train)
+            loss = criterion(y_pred, y_train)
             train_batch_losses.append(loss.item())
             loss.backward()
             optimizer.step()
@@ -101,11 +98,19 @@ def train_net(image_size,
         for x_val, y_val in tqdm(val_loader):
             x_val = x_val.to(device)
             y_val = y_val.to(device)
-            loss = criterion(x_val, y_val)
+            y_pred = model(x_val)
+
+            loss = criterion(y_pred, y_val)
             val_batch_losses.append(loss.item())
 
         val_losses.append(sum(val_batch_losses) / len(val_batch_losses))
-        print(f'-----------------------Train loss: {val_losses[-1]} -------------------------------')
+        print(f'-----------------------Val loss: {val_losses[-1]} -------------------------------')
+        if val_losses[-1] < best_val_loss:
+            best_val_loss = val_losses[-1]
+            if not os.path.isdir('weights/'):
+                os.mkdir('weights/')
+            torch.save(model.state_dict(), f'weights/checkpoint{epoch+1}.pth')
+            print(f'Save checkpoint in: weights/checkpoint{epoch+1}.pth')
 
 
 def get_args():
