@@ -62,7 +62,3 @@ optional arguments:
   --save_path SAVE_PATH
                         path to save image (default: None)
 ```
-## Result
-![xray_res](images/xray.jpeg)
-
-![xray](images/xray_res.png)
