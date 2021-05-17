@@ -14,8 +14,8 @@ class XrayDataset(Dataset):
             [
                 ToTensor(),
                 Resize(size=size),
-                Normalize(mean=[0.5],
-                          std=[0.5])
+                # Normalize(mean=[0.5],
+                #           std=[0.5])
             ]
         )
 
